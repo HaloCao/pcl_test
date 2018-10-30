@@ -50,7 +50,7 @@ void showCloudsLeft(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cl
     p_viz->addPointCloud(cloud_target, tgt_h, "vp1_target", vp_1);
     p_viz->addPointCloud(cloud_source, src_h, "vp1_source", vp_1);
 
-    // PCL_INFO ("Press q to begin the registration.\n");
+    PCL_INFO ("Press q to begin the registration.\n");
     p_viz->spin();
 }
 
