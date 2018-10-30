@@ -32,47 +32,45 @@ boost::timer timer;
 double duration;
 
 //convenient typedefs
-typedef pcl::PointXYZ PointT;
-typedef pcl::PointCloud<PointT> PointCloud;
-typedef pcl::PointNormal PointNormalT;
-typedef pcl::PointCloud<PointNormalT> PointCloudWithNormals;
+typedef PointT PointT;
+typedef PointCloud PointCloud;
 
 //our visualizer
-pcl::visualization::PCLVisualizer *p;
+pcl::visualization::PCLVisualizer *p_viz;
 //its left and right viewports
 int vp_1, vp_2;
 
 void showCloudsLeft(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cloud_source)
 {
-    // p->removePointCloud("vp1_target");
-    // p->removePointCloud("vp1_source");
+    // p_viz->removePointCloud("vp1_target");
+    // p_viz->removePointCloud("vp1_source");
 
     pcl::visualization::PointCloudColorHandlerCustom<PointT> tgt_h(cloud_target, 0, 255, 0);
     pcl::visualization::PointCloudColorHandlerCustom<PointT> src_h(cloud_source, 255, 0, 0);
-    p->addPointCloud(cloud_target, tgt_h, "vp1_target", vp_1);
-    p->addPointCloud(cloud_source, src_h, "vp1_source", vp_1);
+    p_viz->addPointCloud(cloud_target, tgt_h, "vp1_target", vp_1);
+    p_viz->addPointCloud(cloud_source, src_h, "vp1_source", vp_1);
 
     // PCL_INFO ("Press q to begin the registration.\n");
-    p->spin();
+    p_viz->spin();
 }
 
 void showCloudsRight(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cloud_source)
 {
     pcl::visualization::PointCloudColorHandlerCustom<PointT> tgt_h(cloud_target, 0, 255, 0);
     pcl::visualization::PointCloudColorHandlerCustom<PointT> src_h(cloud_source, 255, 0, 0);
-    p->addPointCloud(cloud_target, tgt_h, "vp2_target", vp_2);
-    p->addPointCloud(cloud_source, src_h, "vp2_source", vp_2);
+    p_viz->addPointCloud(cloud_target, tgt_h, "vp2_target", vp_2);
+    p_viz->addPointCloud(cloud_source, src_h, "vp2_source", vp_2);
 
     PCL_INFO("Press q to continue.\n");
-    p->spin();
+    p_viz->spin();
 
-    p->removePointCloud("vp2_target");
-    p->removePointCloud("vp2_source");
+    p_viz->removePointCloud("vp2_target");
+    p_viz->removePointCloud("vp2_source");
 }
 
 int main(int argc, char **argv)
 {
-    pcl::PointCloud<pcl::PointXYZ> cloud_source, cloud_target, cloud_reg;
+    PointCloud cloud_source, cloud_target, cloud_reg;
 
     // load PCD file
     std::string fname = argv[1];
@@ -84,9 +82,9 @@ int main(int argc, char **argv)
     pcl::io::loadPCDFile(fname, cloud_target);
 
     // Create a PCLVisualizer object
-    p = new pcl::visualization::PCLVisualizer(argc, argv, "SCP Test");
-    p->createViewPort(0.0, 0, 0.5, 1.0, vp_1);
-    p->createViewPort(0.5, 0, 1.0, 1.0, vp_2);
+    p_viz = new pcl::visualization::PCLVisualizer(argc, argv, "SCP Test");
+    p_viz->createViewPort(0.0, 0, 0.5, 1.0, vp_1);
+    p_viz->createViewPort(0.5, 0, 1.0, 1.0, vp_2);
 
     //remove NAN points from the cloud
     std::vector<int> indices_source, indices_target;
@@ -97,28 +95,28 @@ int main(int argc, char **argv)
     // Eigen::Vector3f initial_offset(0.1, 0, 0);
     // float angle = static_cast<float>(M_PI) / 4.0f;
     // Eigen::Quaternionf initial_rotation(cos(angle / 2), 0, 0, sin(angle / 2));
-    // pcl::PointCloud<pcl::PointXYZ> cloud_source_transformed;
+    // PointCloud cloud_source_transformed;
     // transformPointCloud(cloud_source, cloud_source_transformed, initial_offset, initial_rotation);
 
     // cloud_target = cloud_source;
     // Create shared pointers
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source_ptr, cloud_target_ptr;
+    PointCloud::Ptr cloud_source_ptr, cloud_target_ptr;
     cloud_source_ptr = cloud_source.makeShared();
     cloud_target_ptr = cloud_target.makeShared();
 
     showCloudsLeft(cloud_source_ptr, cloud_target_ptr);
 
     // Initialize estimators for surface normals and FPFH features
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+    pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
 
     // Normal estimator
-    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> norm_est;
+    pcl::NormalEstimation<PointT, pcl::Normal> norm_est;
     norm_est.setSearchMethod(tree);
     norm_est.setRadiusSearch(0.005);
     pcl::PointCloud<pcl::Normal> normals_source, normals_target;
 
     // FPFH estimator
-    pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> fpfh_est;
+    pcl::FPFHEstimation<PointT, pcl::Normal, pcl::FPFHSignature33> fpfh_est;
     fpfh_est.setSearchMethod(tree);
     fpfh_est.setRadiusSearch(0.05);
     pcl::PointCloud<pcl::FPFHSignature33> features_source, features_target;
@@ -153,8 +151,8 @@ int main(int argc, char **argv)
 
     // Initialize Sample Consensus Prerejective with 5x the number of iterations and 1/5 feature kNNs as SAC-IA
     timer.restart();
-    pcl::SampleConsensusPrerejective<pcl::PointXYZ, pcl::PointXYZ, pcl::FPFHSignature33> reg;
-    // pcl::SampleConsensusPrerejective<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal> reg;
+    pcl::SampleConsensusPrerejective<PointT, PointT, pcl::FPFHSignature33> reg;
+    // pcl::SampleConsensusPrerejective<PointT, PointT, pcl::Normal> reg;
     reg.setMaxCorrespondenceDistance(0.1);
     reg.setMaximumIterations(5000);
     reg.setSimilarityThreshold(0.5f);
@@ -174,7 +172,7 @@ int main(int argc, char **argv)
     duration = timer.elapsed();
     std::cout << "SampleConsensusPrerejective: " << duration << "s" << std::endl;
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_reg_ptr = cloud_reg.makeShared();
+    PointCloud::Ptr cloud_reg_ptr = cloud_reg.makeShared();
 
     showCloudsRight(cloud_reg_ptr, cloud_target_ptr);
 
@@ -185,7 +183,7 @@ int main(int argc, char **argv)
     // pcl::visualization::CloudViewer viewer("Simple Cloud Viewer");
     // viewer.showCloud(cloud_reg_ptr);
 
-    while (!p->wasStopped())
+    while (!p_viz->wasStopped())
     {
     }
 
