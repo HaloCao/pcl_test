@@ -20,3 +20,18 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 sudo make install
 ```
+
+## Compile test files:
+In root directory **pcl_test/**:
+
+build:
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+run test:
+```
+./scp ../data/bun01.pcd ../data/bun4.pcd
+```
