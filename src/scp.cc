@@ -32,8 +32,8 @@ boost::timer timer;
 double duration;
 
 //convenient typedefs
-typedef PointT PointT;
-typedef PointCloud PointCloud;
+typedef pcl::PointXYZ PointT;
+typedef pcl::PointCloud<PointT> PointCloud;
 
 //our visualizer
 pcl::visualization::PCLVisualizer *p_viz;
