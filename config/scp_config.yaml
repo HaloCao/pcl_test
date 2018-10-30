@@ -1,0 +1,12 @@
+
+
+src_pcd: ../data/bun01.pcd
+target_pcd: ../data/bun4.pcd
+
+norm_est_RadiusSearch: 0.005
+fpfh_est_RadiusSearch: 0.05
+
+SCP_MaxCorrespondenceDistance: 0.1
+SCP_MaximumIterations: 5000
+SCP_SimilarityThreshold: 0.8
+SCP_CorrespondenceRandomness: 2

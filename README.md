@@ -7,7 +7,7 @@ Boost, Eigen3, FLANN, VTK.
 
 Install dependencies:
 ```
-sudo apt install libeigen3-dev libboost-dev libflann-dev libvtk5-dev libvtk5-qt4-dev libvtk-java python-vtk libopenni-dev
+sudo apt install libeigen3-dev libboost-dev libflann-dev libvtk5-dev libvtk5-qt4-dev libvtk-java python-vtk
 ```
 
 Compiling:
@@ -19,6 +19,11 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 sudo make install
+```
+
+## Install yaml-cpp for configuration:
+```
+sudo apt install libyaml-cpp-dev 
 ```
 
 ## Compile test files:
@@ -33,5 +38,5 @@ make
 ```
 run test:
 ```
-./scp ../data/bun01.pcd ../data/bun4.pcd
+./scp
 ```

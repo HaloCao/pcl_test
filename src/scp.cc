@@ -27,6 +27,7 @@
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 
 #include <boost/timer.hpp>
+#include <yaml-cpp/yaml.h>
 
 boost::timer timer;
 double duration;
@@ -50,7 +51,7 @@ void showCloudsLeft(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cl
     p_viz->addPointCloud(cloud_target, tgt_h, "vp1_target", vp_1);
     p_viz->addPointCloud(cloud_source, src_h, "vp1_source", vp_1);
 
-    PCL_INFO ("Press q to begin the registration.\n");
+    PCL_INFO("Press q to begin the registration.\n");
     p_viz->spin();
 }
 
@@ -70,16 +71,26 @@ void showCloudsRight(const PointCloud::Ptr cloud_target, const PointCloud::Ptr c
 
 int main(int argc, char **argv)
 {
+    // Load config file
+    YAML::Node lconf = YAML::LoadFile("../config/scp_config.yaml");
+    // set parameters
+    float norm_est_RadiusSearch = lconf["norm_est_RadiusSearch"].as<float>();
+    float fpfh_est_RadiusSearch = lconf["fpfh_est_RadiusSearch"].as<float>();
+    float SCP_MaxCorrespondenceDistance = lconf["SCP_MaxCorrespondenceDistance"].as<float>();
+    int SCP_MaximumIterations = lconf["SCP_MaximumIterations"].as<int>();
+    float SCP_SimilarityThreshold = lconf["SCP_SimilarityThreshold"].as<float>();
+    int SCP_CorrespondenceRandomness = lconf["SCP_CorrespondenceRandomness"].as<int>();
+
     PointCloud cloud_source, cloud_target, cloud_reg;
 
     // load PCD file
-    std::string fname = argv[1];
-    std::cout << "source: " << fname << std::endl;
-    pcl::io::loadPCDFile(fname, cloud_source);
+    std::string src_fname = lconf["src_pcd"].as<std::string>();
+    std::cout << "source: " << src_fname << std::endl;
+    pcl::io::loadPCDFile(src_fname, cloud_source);
 
-    fname = argv[2];
-    std::cout << "target: " << fname << std::endl;
-    pcl::io::loadPCDFile(fname, cloud_target);
+    std::string target_fname = lconf["target_pcd"].as<std::string>();
+    std::cout << "target: " << target_fname << std::endl;
+    pcl::io::loadPCDFile(target_fname, cloud_target);
 
     // Create a PCLVisualizer object
     p_viz = new pcl::visualization::PCLVisualizer(argc, argv, "SCP Test");
@@ -112,13 +123,13 @@ int main(int argc, char **argv)
     // Normal estimator
     pcl::NormalEstimation<PointT, pcl::Normal> norm_est;
     norm_est.setSearchMethod(tree);
-    norm_est.setRadiusSearch(0.005);
+    norm_est.setRadiusSearch(norm_est_RadiusSearch);
     pcl::PointCloud<pcl::Normal> normals_source, normals_target;
 
     // FPFH estimator
     pcl::FPFHEstimation<PointT, pcl::Normal, pcl::FPFHSignature33> fpfh_est;
     fpfh_est.setSearchMethod(tree);
-    fpfh_est.setRadiusSearch(0.05);
+    fpfh_est.setRadiusSearch(fpfh_est_RadiusSearch);
     pcl::PointCloud<pcl::FPFHSignature33> features_source, features_target;
 
     // Estimate the normals and the FPFH features for the source cloud
@@ -153,10 +164,10 @@ int main(int argc, char **argv)
     timer.restart();
     pcl::SampleConsensusPrerejective<PointT, PointT, pcl::FPFHSignature33> reg;
     // pcl::SampleConsensusPrerejective<PointT, PointT, pcl::Normal> reg;
-    reg.setMaxCorrespondenceDistance(0.1);
-    reg.setMaximumIterations(5000);
-    reg.setSimilarityThreshold(0.5f);
-    reg.setCorrespondenceRandomness(2);
+    reg.setMaxCorrespondenceDistance(SCP_MaxCorrespondenceDistance);
+    reg.setMaximumIterations(SCP_MaximumIterations);
+    reg.setSimilarityThreshold(SCP_SimilarityThreshold);
+    reg.setCorrespondenceRandomness(SCP_CorrespondenceRandomness);
 
     // Set source and target cloud/features
     reg.setInputSource(cloud_source_ptr);
@@ -178,10 +189,8 @@ int main(int argc, char **argv)
 
     Eigen::Matrix4f T = reg.getFinalTransformation();
 
-    std::cout << "T = " << T << std::endl;
-
-    // pcl::visualization::CloudViewer viewer("Simple Cloud Viewer");
-    // viewer.showCloud(cloud_reg_ptr);
+    std::cout << "T = \n"
+              << T << std::endl;
 
     while (!p_viz->wasStopped())
     {

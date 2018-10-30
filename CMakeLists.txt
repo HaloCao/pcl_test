@@ -18,12 +18,15 @@ endif(CCACHE_FOUND)
 find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(VTK REQUIRED)
+find_package(yaml-cpp REQUIRED)
+# find_package(PkgConfig REQUIRED)
+# pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
 include(${VTK_USE_FILE})
 
-include_directories(${EIGEN3_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
+include_directories(${EIGEN3_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIR})
 
-link_directories(${PCL_LIBRARY_DIRS})
+link_directories(${PCL_LIBRARY_DIRS} )
 
 add_definitions(${PCL_DEFINITIONS})
 
@@ -40,4 +43,5 @@ target_link_libraries (scp
 # ${Boost_LIBRARIES}
 ${VTK_LIBRARIES}
 ${PCL_LIBRARIES}
+yaml-cpp
 )
