@@ -1,12 +1,16 @@
 
 
-src_pcd: ../data/bun01.pcd
-target_pcd: ../data/bun4.pcd
+# src_pcd: ../data/bun03.pcd
+# target_pcd: ../data/bun4.pcd
+
+src_pcd: ../data/coffee_mug_1_1_1.pcd
+target_pcd: ../data/coffee_mug_1_1_68.pcd
+
 
 norm_est_RadiusSearch: 0.005
 fpfh_est_RadiusSearch: 0.05
 
 SCP_MaxCorrespondenceDistance: 0.1
 SCP_MaximumIterations: 5000
-SCP_SimilarityThreshold: 0.8
+SCP_SimilarityThreshold: 0.5
 SCP_CorrespondenceRandomness: 2

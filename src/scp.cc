@@ -24,16 +24,18 @@
 #include <pcl/registration/sample_consensus_prerejective.h>
 #include <pcl/visualization/cloud_viewer.h>
 
+#include <pcl/keypoints/harris_3d.h>
+
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 
-#include <boost/timer.hpp>
+// #include <boost/timer.hpp>
 #include <yaml-cpp/yaml.h>
 
-boost::timer timer;
+pcl::StopWatch timer;
 double duration;
 
 //convenient typedefs
-typedef pcl::PointXYZ PointT;
+typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointCloud<PointT> PointCloud;
 
 //our visualizer
@@ -46,9 +48,14 @@ void showCloudsLeft(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cl
     // p_viz->removePointCloud("vp1_target");
     // p_viz->removePointCloud("vp1_source");
 
-    pcl::visualization::PointCloudColorHandlerCustom<PointT> tgt_h(cloud_target, 0, 255, 0);
-    pcl::visualization::PointCloudColorHandlerCustom<PointT> src_h(cloud_source, 255, 0, 0);
+    // pcl::visualization::PointCloudColorHandlerCustom<PointT> tgt_h(cloud_target, 0, 255, 0);
+    // pcl::visualization::PointCloudColorHandlerCustom<PointT> src_h(cloud_source, 255, 0, 0);
+    pcl::visualization::PointCloudColorHandlerRGBField<PointT> tgt_h(cloud_target);
+    pcl::visualization::PointCloudColorHandlerRGBField<PointT> src_h(cloud_source);
     p_viz->addPointCloud(cloud_target, tgt_h, "vp1_target", vp_1);
+    PCL_INFO("Press q to continue.\n");
+    p_viz->spin();
+
     p_viz->addPointCloud(cloud_source, src_h, "vp1_source", vp_1);
 
     PCL_INFO("Press q to begin the registration.\n");
@@ -57,8 +64,10 @@ void showCloudsLeft(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cl
 
 void showCloudsRight(const PointCloud::Ptr cloud_target, const PointCloud::Ptr cloud_source)
 {
-    pcl::visualization::PointCloudColorHandlerCustom<PointT> tgt_h(cloud_target, 0, 255, 0);
-    pcl::visualization::PointCloudColorHandlerCustom<PointT> src_h(cloud_source, 255, 0, 0);
+    // pcl::visualization::PointCloudColorHandlerCustom<PointT> tgt_h(cloud_target, 0, 255, 0);
+    // pcl::visualization::PointCloudColorHandlerCustom<PointT> src_h(cloud_source, 255, 0, 0);
+    pcl::visualization::PointCloudColorHandlerRGBField<PointT> tgt_h(cloud_target);
+    pcl::visualization::PointCloudColorHandlerRGBField<PointT> src_h(cloud_source);
     p_viz->addPointCloud(cloud_target, tgt_h, "vp2_target", vp_2);
     p_viz->addPointCloud(cloud_source, src_h, "vp2_source", vp_2);
 
@@ -111,9 +120,17 @@ int main(int argc, char **argv)
 
     // cloud_target = cloud_source;
     // Create shared pointers
-    PointCloud::Ptr cloud_source_ptr, cloud_target_ptr;
+    PointCloud::Ptr cloud_source_ptr, cloud_target_ptr, cloud_reg_ptr;
     cloud_source_ptr = cloud_source.makeShared();
     cloud_target_ptr = cloud_target.makeShared();
+    cloud_reg_ptr = cloud_reg.makeShared();
+
+    // pcl::HarrisKeypoint3D<PointT, PointT> detector;
+    // PointCloud::Ptr keypoints(new PointCloud);
+    // detector.setNonMaxSupression(true);
+    // detector.setInputCloud(cloud_source_ptr);
+    // detector.setThreshold(1e-6);
+    // detector.compute(*keypoints);
 
     showCloudsLeft(cloud_source_ptr, cloud_target_ptr);
 
@@ -133,37 +150,36 @@ int main(int argc, char **argv)
     pcl::PointCloud<pcl::FPFHSignature33> features_source, features_target;
 
     // Estimate the normals and the FPFH features for the source cloud
-    timer.restart();
+    timer.reset();
     norm_est.setInputCloud(cloud_source_ptr);
     norm_est.compute(normals_source);
-    duration = timer.elapsed();
+    duration = timer.getTimeSeconds();
     std::cout << "Normal estimator: " << duration << "s" << std::endl;
 
-    timer.restart();
+    timer.reset();
     fpfh_est.setInputCloud(cloud_source_ptr);
     fpfh_est.setInputNormals(normals_source.makeShared());
     fpfh_est.compute(features_source);
-    duration = timer.elapsed();
+    duration = timer.getTimeSeconds();
     std::cout << "FPFH estimator: " << duration << "s" << std::endl;
 
     // Estimate the normals and the FPFH features for the target cloud
-    timer.restart();
+    timer.reset();
     norm_est.setInputCloud(cloud_target_ptr);
     norm_est.compute(normals_target);
-    duration = timer.elapsed();
+    duration = timer.getTimeSeconds();
     std::cout << "Normal estimator: " << duration << "s" << std::endl;
 
-    timer.restart();
+    timer.reset();
     fpfh_est.setInputCloud(cloud_target_ptr);
     fpfh_est.setInputNormals(normals_target.makeShared());
     fpfh_est.compute(features_target);
-    duration = timer.elapsed();
+    duration = timer.getTimeSeconds();
     std::cout << "FPFH estimator: " << duration << "s" << std::endl;
 
     // Initialize Sample Consensus Prerejective with 5x the number of iterations and 1/5 feature kNNs as SAC-IA
-    timer.restart();
+    timer.reset();
     pcl::SampleConsensusPrerejective<PointT, PointT, pcl::FPFHSignature33> reg;
-    // pcl::SampleConsensusPrerejective<PointT, PointT, pcl::Normal> reg;
     reg.setMaxCorrespondenceDistance(SCP_MaxCorrespondenceDistance);
     reg.setMaximumIterations(SCP_MaximumIterations);
     reg.setSimilarityThreshold(SCP_SimilarityThreshold);
@@ -174,16 +190,12 @@ int main(int argc, char **argv)
     reg.setInputTarget(cloud_target_ptr);
     reg.setSourceFeatures(features_source.makeShared());
     reg.setTargetFeatures(features_target.makeShared());
-    // reg.setSourceFeatures(normals_source.makeShared());
-    // reg.setTargetFeatures(normals_target.makeShared());
 
     // Register
-    reg.align(cloud_reg);
+    reg.align(*cloud_reg_ptr);
 
-    duration = timer.elapsed();
+    duration = timer.getTimeSeconds();
     std::cout << "SampleConsensusPrerejective: " << duration << "s" << std::endl;
-
-    PointCloud::Ptr cloud_reg_ptr = cloud_reg.makeShared();
 
     showCloudsRight(cloud_reg_ptr, cloud_target_ptr);
 
