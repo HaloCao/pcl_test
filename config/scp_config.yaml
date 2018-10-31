@@ -3,11 +3,11 @@
 # src_pcd: ../data/bun03.pcd
 # target_pcd: ../data/bun4.pcd
 
-# src_pcd: ../data/coffee_mug_1_1_1.pcd
-# target_pcd: ../data/coffee_mug_1_1_68.pcd
-
 src_pcd: ../data/water_bottle_1_1_1.pcd
 target_pcd: ../data/water_bottle_1_1_47.pcd
+
+# src_pcd: ../data/office1_keypoints.pcd
+# target_pcd: ../data/office2_keypoints.pcd
 
 harris_threshold: 1.0e-6
 harris_radius: 0.002

@@ -36,6 +36,7 @@ double duration;
 
 //convenient typedefs
 typedef pcl::PointXYZRGB PointT;
+typedef pcl::PointXYZI KeyPointT;
 typedef pcl::PointCloud<PointT> PointCloud;
 
 //our visualizer
@@ -125,39 +126,51 @@ int main(int argc, char **argv)
     cloud_target_ptr = cloud_target.makeShared();
     cloud_reg_ptr = cloud_reg.makeShared();
 
-    // pcl::HarrisKeypoint3D<PointT, PointT> detector;
-    // PointCloud::Ptr keypoints(new PointCloud);
-    // detector.setNonMaxSupression(true);
-    // detector.setInputCloud(cloud_source_ptr);
-    // detector.setThreshold(1e-6);
-    // detector.compute(*keypoints);
+    pcl::HarrisKeypoint3D<PointT, KeyPointT> detector;
+    pcl::PointCloud<KeyPointT>::Ptr source_keypoints_ptr(new pcl::PointCloud<KeyPointT>);
+    pcl::PointCloud<KeyPointT>::Ptr target_keypoints_ptr(new pcl::PointCloud<KeyPointT>);
+    pcl::PointCloud<KeyPointT>::Ptr reg_keypoints_ptr(new pcl::PointCloud<KeyPointT>);
+    detector.setNonMaxSupression(true);
+    detector.setThreshold(lconf["harris_threshold"].as<float>());
+    detector.setRadius(lconf["harris_radius"].as<float>());
+
+    detector.setInputCloud(cloud_source_ptr);
+    detector.compute(*source_keypoints_ptr);
+
+    detector.setInputCloud(cloud_target_ptr);
+    detector.compute(*target_keypoints_ptr);
+
+    std::cout << "source size: "<<(*cloud_source_ptr).size()<<std::endl;
+    std::cout << "source keypoints size: "<<(*source_keypoints_ptr).size()<<std::endl;
+    std::cout << "target size: "<<(*cloud_target_ptr).size()<<std::endl;
+    std::cout << "target keypoints size: "<<(*target_keypoints_ptr).size()<<std::endl;
 
     showCloudsLeft(cloud_source_ptr, cloud_target_ptr);
 
     // Initialize estimators for surface normals and FPFH features
-    pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
+    pcl::search::KdTree<KeyPointT>::Ptr tree(new pcl::search::KdTree<KeyPointT>);
 
     // Normal estimator
-    pcl::NormalEstimation<PointT, pcl::Normal> norm_est;
+    pcl::NormalEstimation<KeyPointT, pcl::Normal> norm_est;
     norm_est.setSearchMethod(tree);
     norm_est.setRadiusSearch(norm_est_RadiusSearch);
     pcl::PointCloud<pcl::Normal> normals_source, normals_target;
 
     // FPFH estimator
-    pcl::FPFHEstimation<PointT, pcl::Normal, pcl::FPFHSignature33> fpfh_est;
+    pcl::FPFHEstimation<KeyPointT, pcl::Normal, pcl::FPFHSignature33> fpfh_est;
     fpfh_est.setSearchMethod(tree);
     fpfh_est.setRadiusSearch(fpfh_est_RadiusSearch);
     pcl::PointCloud<pcl::FPFHSignature33> features_source, features_target;
 
     // Estimate the normals and the FPFH features for the source cloud
     timer.reset();
-    norm_est.setInputCloud(cloud_source_ptr);
+    norm_est.setInputCloud(source_keypoints_ptr);
     norm_est.compute(normals_source);
     duration = timer.getTimeSeconds();
     std::cout << "Normal estimator: " << duration << "s" << std::endl;
 
     timer.reset();
-    fpfh_est.setInputCloud(cloud_source_ptr);
+    fpfh_est.setInputCloud(source_keypoints_ptr);
     fpfh_est.setInputNormals(normals_source.makeShared());
     fpfh_est.compute(features_source);
     duration = timer.getTimeSeconds();
@@ -165,13 +178,13 @@ int main(int argc, char **argv)
 
     // Estimate the normals and the FPFH features for the target cloud
     timer.reset();
-    norm_est.setInputCloud(cloud_target_ptr);
+    norm_est.setInputCloud(target_keypoints_ptr);
     norm_est.compute(normals_target);
     duration = timer.getTimeSeconds();
     std::cout << "Normal estimator: " << duration << "s" << std::endl;
 
     timer.reset();
-    fpfh_est.setInputCloud(cloud_target_ptr);
+    fpfh_est.setInputCloud(target_keypoints_ptr);
     fpfh_est.setInputNormals(normals_target.makeShared());
     fpfh_est.compute(features_target);
     duration = timer.getTimeSeconds();
@@ -179,30 +192,32 @@ int main(int argc, char **argv)
 
     // Initialize Sample Consensus Prerejective with 5x the number of iterations and 1/5 feature kNNs as SAC-IA
     timer.reset();
-    pcl::SampleConsensusPrerejective<PointT, PointT, pcl::FPFHSignature33> reg;
+    pcl::SampleConsensusPrerejective<KeyPointT, KeyPointT, pcl::FPFHSignature33> reg;
     reg.setMaxCorrespondenceDistance(SCP_MaxCorrespondenceDistance);
     reg.setMaximumIterations(SCP_MaximumIterations);
     reg.setSimilarityThreshold(SCP_SimilarityThreshold);
     reg.setCorrespondenceRandomness(SCP_CorrespondenceRandomness);
 
     // Set source and target cloud/features
-    reg.setInputSource(cloud_source_ptr);
-    reg.setInputTarget(cloud_target_ptr);
+    reg.setInputSource(source_keypoints_ptr);
+    reg.setInputTarget(target_keypoints_ptr);
     reg.setSourceFeatures(features_source.makeShared());
     reg.setTargetFeatures(features_target.makeShared());
 
     // Register
-    reg.align(*cloud_reg_ptr);
+    reg.align(*reg_keypoints_ptr);
 
     duration = timer.getTimeSeconds();
     std::cout << "SampleConsensusPrerejective: " << duration << "s" << std::endl;
 
-    showCloudsRight(cloud_reg_ptr, cloud_target_ptr);
+    pcl::transformPointCloud(*cloud_source_ptr, *cloud_reg_ptr, reg.getFinalTransformation());
 
     Eigen::Matrix4f T = reg.getFinalTransformation();
 
     std::cout << "T = \n"
               << T << std::endl;
+
+    showCloudsRight(cloud_reg_ptr, cloud_target_ptr);
 
     while (!p_viz->wasStopped())
     {
