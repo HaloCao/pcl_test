@@ -1,6 +1,6 @@
 # PCL registration test
 
-## PCL installation(compiling from source):
+## 1. PCL installation(compiling from source):
 
 Dependencies:
 Boost, Eigen3, FLANN, VTK.
@@ -21,12 +21,18 @@ make -j4
 sudo make install
 ```
 
-## Install yaml-cpp for configuration:
+## 2. Download this repository:
+```
+cd ~
+git clone https://github.com/JinyaoZhu/pcl_test.git
+```
+
+## 3. Install yaml-cpp for configuration:
 ```
 sudo apt install libyaml-cpp-dev 
 ```
 
-## Compile test files:
+## 4. Compile test files:
 In root directory **pcl_test/**:
 
 build:
