@@ -34,8 +34,6 @@ sudo apt install libyaml-cpp-dev
 ```
 
 ## 4. Compile test files:
-In root directory **pcl_test/**:
-
 build:
 ```
 cd ~/pcl_test
