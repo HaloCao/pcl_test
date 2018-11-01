@@ -12,6 +12,7 @@ sudo apt install libeigen3-dev libboost-dev libflann-dev libvtk5-dev libvtk5-qt4
 
 Compiling:
 ```
+cd ~
 git clone https://github.com/PointCloudLibrary/pcl.git
 cd pcl
 mkdir build
@@ -37,6 +38,7 @@ In root directory **pcl_test/**:
 
 build:
 ```
+cd ~/pcl_test
 mkdir build
 cd build
 cmake ..
