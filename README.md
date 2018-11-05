@@ -3,11 +3,11 @@
 ## 1. PCL installation(compiling from source):
 
 Dependencies:
-Boost, Eigen3, FLANN, VTK.
+Boost, Eigen3, FLANN, VTK, OpenNI.
 
 Install dependencies:
 ```
-sudo apt install libeigen3-dev libboost-dev libflann-dev libvtk5-dev libvtk5-qt4-dev libvtk-java python-vtk
+sudo apt install libeigen3-dev libboost-all-dev libflann-dev libvtk5-dev libvtk5-qt4-dev libvtk-java python-vtk libopenni-dev 
 ```
 
 Compiling:
