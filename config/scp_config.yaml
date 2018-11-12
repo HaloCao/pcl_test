@@ -3,11 +3,11 @@
 # src_pcd: ../data/bun03.pcd
 # target_pcd: ../data/bun4.pcd
 
-src_pcd: ../data/water_bottle_1_1_1.pcd
-target_pcd: ../data/water_bottle_1_1_47.pcd
+# src_pcd: ../data/water_bottle_1_1_1.pcd
+# target_pcd: ../data/water_bottle_1_1_47.pcd
 
-# src_pcd: ../data/office1_keypoints.pcd
-# target_pcd: ../data/office2_keypoints.pcd
+src_pcd: ../data/instant_noodles_1_1_1.pcd
+target_pcd: ../data/instant_noodles_1_1_25.pcd
 
 harris_threshold: 1.0e-6
 harris_radius: 0.002
@@ -17,5 +17,5 @@ fpfh_est_RadiusSearch: 0.05
 
 SCP_MaxCorrespondenceDistance: 0.1
 SCP_MaximumIterations: 5000
-SCP_SimilarityThreshold: 0.6
+SCP_SimilarityThreshold: 0.5
 SCP_CorrespondenceRandomness: 2

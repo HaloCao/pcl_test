@@ -65,6 +65,7 @@ void showCloudsRight(const PointCloud::Ptr cloud_target, const PointCloud::Ptr c
 
 int main(int argc, char **argv)
 {
+    pcl::console::setVerbosityLevel(pcl::console::L_DEBUG); // show debug messages
     // Load config file
     YAML::Node lconf = YAML::LoadFile("../config/scp_config.yaml");
     // set parameters
