@@ -19,8 +19,6 @@ find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(VTK REQUIRED)
 find_package(yaml-cpp REQUIRED)
-# find_package(PkgConfig REQUIRED)
-# pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
 
 include(${VTK_USE_FILE})
 
@@ -30,14 +28,7 @@ link_directories(${PCL_LIBRARY_DIRS} )
 
 add_definitions(${PCL_DEFINITIONS})
 
-# add_executable (icp src/icp.cc)
 add_executable (scp src/scp.cc)
-
-# target_link_libraries (icp
-# # ${Boost_LIBRARIES}
-# ${VTK_LIBRARIES}
-# ${PCL_LIBRARIES}
-# )
 
 target_link_libraries (scp
 # ${Boost_LIBRARIES}
