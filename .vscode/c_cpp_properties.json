@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/pcl-1.8"
+                "/usr/local/include/pcl-1.8",
+                "/usr/include/yaml-cpp"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

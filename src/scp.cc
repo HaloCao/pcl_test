@@ -7,6 +7,7 @@
 #include <pcl/registration/registration.h>
 #include <pcl/registration/sample_consensus_prerejective.h>
 #include <pcl/visualization/cloud_viewer.h>
+#include <pcl/filters/voxel_grid.h>
 
 #include <pcl/keypoints/harris_3d.h>
 
@@ -20,7 +21,8 @@ double duration;
 
 //convenient typedefs
 typedef pcl::PointXYZRGB PointT;
-typedef pcl::PointXYZI KeyPointT;
+// typedef pcl::PointXYZI KeyPointT;
+typedef PointT KeyPointT;
 typedef pcl::PointCloud<PointT> PointCloud;
 
 //our visualizer
@@ -75,6 +77,8 @@ int main(int argc, char **argv)
     int SCP_MaximumIterations = lconf["SCP_MaximumIterations"].as<int>();
     float SCP_SimilarityThreshold = lconf["SCP_SimilarityThreshold"].as<float>();
     int SCP_CorrespondenceRandomness = lconf["SCP_CorrespondenceRandomness"].as<int>();
+    float SCP_InlierFraction = lconf["SCP_InlierFraction"].as<float>();
+    float grid_filter_leafsize = lconf["grid_filter_leafsize"].as<float>();
 
     PointCloud cloud_source, cloud_target, cloud_reg;
 
@@ -111,24 +115,31 @@ int main(int argc, char **argv)
     cloud_target_ptr = cloud_target.makeShared();
     cloud_reg_ptr = cloud_reg.makeShared();
 
-    pcl::HarrisKeypoint3D<PointT, KeyPointT> detector;
+    // pcl::HarrisKeypoint3D<PointT, KeyPointT> detector;
     pcl::PointCloud<KeyPointT>::Ptr source_keypoints_ptr(new pcl::PointCloud<KeyPointT>);
     pcl::PointCloud<KeyPointT>::Ptr target_keypoints_ptr(new pcl::PointCloud<KeyPointT>);
     pcl::PointCloud<KeyPointT>::Ptr reg_keypoints_ptr(new pcl::PointCloud<KeyPointT>);
-    detector.setNonMaxSupression(true);
-    detector.setThreshold(lconf["harris_threshold"].as<float>());
-    detector.setRadius(lconf["harris_radius"].as<float>());
+    // detector.setNonMaxSupression(true);
+    // detector.setThreshold(lconf["harris_threshold"].as<float>());
+    // detector.setRadius(lconf["harris_radius"].as<float>());
 
-    detector.setInputCloud(cloud_source_ptr);
-    detector.compute(*source_keypoints_ptr);
+    // detector.setInputCloud(cloud_source_ptr);
+    // detector.compute(*source_keypoints_ptr);
 
-    detector.setInputCloud(cloud_target_ptr);
-    detector.compute(*target_keypoints_ptr);
+    // detector.setInputCloud(cloud_target_ptr);
+    // detector.compute(*target_keypoints_ptr);
 
-    std::cout << "source size: "<<(*cloud_source_ptr).size()<<std::endl;
-    std::cout << "source keypoints size: "<<(*source_keypoints_ptr).size()<<std::endl;
-    std::cout << "target size: "<<(*cloud_target_ptr).size()<<std::endl;
-    std::cout << "target keypoints size: "<<(*target_keypoints_ptr).size()<<std::endl;
+    pcl::VoxelGrid<PointT> grid;
+    grid.setLeafSize (grid_filter_leafsize, grid_filter_leafsize, grid_filter_leafsize);
+    grid.setInputCloud (cloud_source_ptr);
+    grid.filter (*source_keypoints_ptr);
+    grid.setInputCloud (cloud_target_ptr);
+    grid.filter (*target_keypoints_ptr);
+
+    std::cout << "source size: " << (*cloud_source_ptr).size() << std::endl;
+    std::cout << "source keypoints size: " << (*source_keypoints_ptr).size() << std::endl;
+    std::cout << "target size: " << (*cloud_target_ptr).size() << std::endl;
+    std::cout << "target keypoints size: " << (*target_keypoints_ptr).size() << std::endl;
 
     showCloudsLeft(cloud_source_ptr, cloud_target_ptr);
 
@@ -182,6 +193,7 @@ int main(int argc, char **argv)
     reg.setMaximumIterations(SCP_MaximumIterations);
     reg.setSimilarityThreshold(SCP_SimilarityThreshold);
     reg.setCorrespondenceRandomness(SCP_CorrespondenceRandomness);
+    reg.setInlierFraction(SCP_InlierFraction);
 
     // Set source and target cloud/features
     reg.setInputSource(source_keypoints_ptr);
@@ -195,14 +207,25 @@ int main(int argc, char **argv)
     duration = timer.getTimeSeconds();
     std::cout << "SampleConsensusPrerejective: " << duration << "s" << std::endl;
 
-    pcl::transformPointCloud(*cloud_source_ptr, *cloud_reg_ptr, reg.getFinalTransformation());
-
-    Eigen::Matrix4f T = reg.getFinalTransformation();
-
-    std::cout << "T = \n"
-              << T << std::endl;
-
-    showCloudsRight(cloud_reg_ptr, cloud_target_ptr);
+    if (reg.hasConverged())
+    {
+        pcl::transformPointCloud(*cloud_source_ptr, *cloud_reg_ptr, reg.getFinalTransformation());
+        Eigen::Matrix4f T = reg.getFinalTransformation();
+        pcl::console::print_info("    | %6.3f %6.3f %6.3f | \n", T(0, 0), T(0, 1), T(0, 2));
+        pcl::console::print_info("R = | %6.3f %6.3f %6.3f | \n", T(1, 0), T(1, 1), T(1, 2));
+        pcl::console::print_info("    | %6.3f %6.3f %6.3f | \n", T(2, 0), T(2, 1), T(2, 2));
+        pcl::console::print_info("\n");
+        pcl::console::print_info("t = < %0.3f, %0.3f, %0.3f >\n", T(0, 3), T(1, 3), T(2, 3));
+        pcl::console::print_info("\n");
+        pcl::console::print_info("Inliers: (%i/%i) = %f\n",
+                                 reg.getInliers().size(), source_keypoints_ptr->size(),
+                                 (float)reg.getInliers().size() / source_keypoints_ptr->size());
+        showCloudsRight(cloud_reg_ptr, cloud_target_ptr);
+    }
+    else
+    {
+        pcl::console::print_error("Alignment failed!\n");
+    }
 
     while (!p_viz->wasStopped())
     {

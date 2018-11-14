@@ -30,14 +30,14 @@ link_directories(${PCL_LIBRARY_DIRS} )
 
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable (icp src/icp.cc)
+# add_executable (icp src/icp.cc)
 add_executable (scp src/scp.cc)
 
-target_link_libraries (icp
-# ${Boost_LIBRARIES}
-${VTK_LIBRARIES}
-${PCL_LIBRARIES}
-)
+# target_link_libraries (icp
+# # ${Boost_LIBRARIES}
+# ${VTK_LIBRARIES}
+# ${PCL_LIBRARIES}
+# )
 
 target_link_libraries (scp
 # ${Boost_LIBRARIES}

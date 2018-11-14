@@ -3,19 +3,31 @@
 # src_pcd: ../data/bun03.pcd
 # target_pcd: ../data/bun4.pcd
 
-# src_pcd: ../data/water_bottle_1_1_1.pcd
-# target_pcd: ../data/water_bottle_1_1_47.pcd
+# src_pcd: ../data/shampoo_1_1_1.pcd
+# target_pcd: ../data/shampoo_1_1_47.pcd
 
-src_pcd: ../data/instant_noodles_1_1_1.pcd
-target_pcd: ../data/instant_noodles_1_1_25.pcd
+# src_pcd: ../data/marker_1_1_1.pcd
+# target_pcd: ../data/marker_1_1_47.pcd
+
+src_pcd: ../data/coffee_mug_1_1_1.pcd
+target_pcd: ../data/coffee_mug_1_1_68.pcd
 
 harris_threshold: 1.0e-6
-harris_radius: 0.002
+harris_radius: 0.0021
 
 norm_est_RadiusSearch: 0.005
 fpfh_est_RadiusSearch: 0.05
 
-SCP_MaxCorrespondenceDistance: 0.1
+# Euclidian distance for inlier thresholding
+SCP_MaxCorrespondenceDistance: 0.02 
+# Maximum iterations number in RANSAC
 SCP_MaximumIterations: 5000
-SCP_SimilarityThreshold: 0.5
-SCP_CorrespondenceRandomness: 2
+# Similarity threshold for prerejector
+SCP_SimilarityThreshold: 0.9
+# Random sample first k nearest correspondences
+SCP_CorrespondenceRandomness: 5
+# Minimum inlier fraction
+SCP_InlierFraction: 0.30
+
+# Leaf size for grid filter
+grid_filter_leafsize: 0.004
