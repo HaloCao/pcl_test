@@ -1,33 +1,35 @@
 
-
+# https://rgbd-dataset.cs.washington.edu/dataset/rgbd-dataset_pcd_ascii/
 # src_pcd: ../data/bun03.pcd
 # target_pcd: ../data/bun4.pcd
 
-# src_pcd: ../data/shampoo_1_1_1.pcd
-# target_pcd: ../data/shampoo_1_1_47.pcd
+# src_pcd: ../data/water_bottle_1_1_1.pcd
+# target_pcd: ../data/water_bottle_1_1_47.pcd
 
 # src_pcd: ../data/marker_1_1_1.pcd
 # target_pcd: ../data/marker_1_1_47.pcd
 
-src_pcd: ../data/coffee_mug_1_1_1.pcd
-target_pcd: ../data/coffee_mug_1_1_68.pcd
+src_pcd: ../data/coffee_mug_1_1_68.pcd
+target_pcd: ../data/coffee_mug_1_1_1.pcd
 
 harris_threshold: 1.0e-6
 harris_radius: 0.0021
 
-norm_est_RadiusSearch: 0.005
-fpfh_est_RadiusSearch: 0.05
+norm_est_RadiusSearch: 0.01
+fpfh_est_RadiusSearch: 0.01
 
 # Euclidian distance for inlier thresholding
-SCP_MaxCorrespondenceDistance: 0.02 
+scp_max_corr_distance: 0.01
 # Maximum iterations number in RANSAC
-SCP_MaximumIterations: 5000
+scp_max_iter: 5000
 # Similarity threshold for prerejector
-SCP_SimilarityThreshold: 0.9
+scp_sim_threshold: 0.0
 # Random sample first k nearest correspondences
-SCP_CorrespondenceRandomness: 5
+scp_corr_randomness: 3
 # Minimum inlier fraction
-SCP_InlierFraction: 0.30
+scp_inlier_fraction: 0.05
+# Number of sample using for transformation estimation
+scp_number_of_samples: 3
 
 # Leaf size for grid filter
-grid_filter_leafsize: 0.004
+grid_filter_leafsize: 0.005
